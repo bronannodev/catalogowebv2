@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Avanti</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ... (tus estilos sin cambios) ... */
+        body { font-family: 'Inter', sans-serif; }
+        .text-fade-enter { opacity: 0; transform: translateY(10px); }
+        .text-fade-exit { opacity: 0; transform: translateY(-10px); }
+        .text-fade-active { opacity: 1; transform: translateY(0); transition: opacity 300ms ease-out, transform 300ms ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .view-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+    <div id="app" class="min-h-screen relative overflow-hidden">
+        <div class="absolute inset-0 -z-10 bg-gradient-to-br from-purple-900 via-black to-blue-900"></div>
+
+        <header class="relative z-10">
+            <nav class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div>
+                     <h1 class="text-3xl font-black tracking-tighter opacity-80">AVANTI</h1>
+                </div>
+                <div>
+                    <button id="adminLoginBtn" class="text-sm font-medium text-white bg-white/10 backdrop-blur-md rounded-full px-4 py-2 hover:bg-white/20 transition-all duration-300">
+                        Admin Login
+                    </button>
+                </div>
+            </nav>
+        </header>
+
+        <main id="mainPortal" class="relative z-10 pt-20 pb-20 sm:pt-32 sm:pb-24 view-fade-in">
+            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-2xl sm:text-3xl font-semibold text-gray-200">✨ Visita nuestro catalogo actualizado ✨</h2>
+                <p class="mt-2 text-lg text-gray-400">👇 Enterate de lo ultimo accediendo a cada categoria</p>
+                <h1 id="changingText" class="mt-12 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter text-fade-active" style="min-height: 100px;">
+                    Nuevas Colecciones
+                </h1>
+                <div class="mt-16 max-w-lg mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button data-group="hombres" class="category-btn bg-white/10 backdrop-blur-md text-white font-semibold py-3 px-6 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
+                        Indumentaria Hombres
+                    </button>
+                    <button data-group="mujeres" class="category-btn bg-white/10 backdrop-blur-md text-white font-semibold py-3 px-6 rounded-lg hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
+                        Indumentaria Mujeres
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <section id="categoryView" class="hidden relative z-10 pt-8 pb-20">
+            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <button id="backButton" class="mb-6 bg-white/10 backdrop-blur-md text-white font-semibold py-2 px-4 rounded-lg hover:bg-white/20 transition-all duration-300">
+                    &larr; Volver al inicio
+                </button>
+                <h2 id="categoryTitle" class="text-4xl font-bold mb-4"></h2>
+                <div id="subCategoryTabs" class="flex flex-wrap gap-2 mb-8">
+                    </div>
+                <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                    </div>
+            </div>
+        </section>
+
+        <div id="adminModal" class="hidden opacity-0 fixed inset-0 z-50 bg-black/50 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-300">
+            <div class="bg-white text-gray-900 w-full max-w-sm rounded-lg shadow-xl p-6 sm:p-8 relative scale-95 opacity-0 transition-all duration-300">
+                <div class="w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+                <h3 class="text-2xl font-semibold text-center mb-2">¡Hola, Admin!</h3>
+                <p class="text-center text-gray-500 text-sm mb-6">Ingresa para gestionar el catálogo.</p>
+                <form id="adminLoginForm" class="space-y-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg></span>
+                            <input type="text" id="username" name="username" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="admin">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                         <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg></span>
+                            <input type="password" id="password" name="password" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="••••••••">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-purple-700 text-white font-bold py-3 px-4 rounded-lg hover:bg-purple-800 transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                        Ingresar
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <footer class="relative z-10 text-center py-6 text-gray-500 text-sm">
+            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                &copy; <span id="currentYear"></span> Derechos reservado por BronannoDev
+            </div>
+        </footer>
+
+    </div> 
+    
+    <script>
+        let allProducts = []; 
+        const API_URL = '/api';
+        // ... (Definiciones de categoryTitles, subCategories, groupProducts sin cambios) ...
+        const categoryTitles = { 'hombres': 'Indumentaria Masculina', 'mujeres': 'Indumentaria Femenina' };
+        const subCategories = { 'hombres': [{ key: 'all-hombres', name: 'Todo Hombres' }, { key: 'masculino', name: 'Indumentaria' }, { key: 'jeans-hombres', name: 'Jeans' }, { key: 'promos-hombres', name: 'Promociones' }], 'mujeres': [{ key: 'all-mujeres', name: 'Todo Mujeres' }, { key: 'femenino', name: 'Indumentaria' }, { key: 'jeans-mujeres', name: 'Jeans' }, { key: 'promos-mujeres', name: 'Promociones' }] };
+        const groupProducts = { 'hombres': ['masculino', 'jeans-hombres', 'promos-hombres'], 'mujeres': ['femenino', 'jeans-mujeres', 'promos-mujeres'] };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... (Selectores del DOM sin cambios) ...
+            const mainPortal = document.getElementById('mainPortal'); const categoryView = document.getElementById('categoryView'); const productGrid = document.getElementById('productGrid'); const categoryTitle = document.getElementById('categoryTitle'); const backButton = document.getElementById('backButton'); const categoryButtons = document.querySelectorAll('.category-btn'); const subCategoryTabs = document.getElementById('subCategoryTabs'); const adminModal = document.getElementById('adminModal'); const adminLoginBtn = document.getElementById('adminLoginBtn'); const closeModalBtn = document.getElementById('closeModalBtn'); const adminLoginForm = document.getElementById('adminLoginForm'); const modalContent = adminModal.querySelector('div');
+            let currentGroup = '';
+
+            // ... (Función fetchAllProducts sin cambios) ...
+            async function fetchAllProducts() {
+                try {
+                    const response = await fetch(`${API_URL}/products`);
+                    if (!response.ok) { console.error('Error al cargar productos de la API'); allProducts = []; return; }
+                    allProducts = await response.json();
+                } catch (error) { console.error('Error de red. Asegúrate de que el backend (app.py) esté funcionando.', error); allProducts = []; }
+            }
+
+            // ... (Animación de Texto Cambiante sin cambios) ...
+            const changingTextElement = document.getElementById('changingText'); const textsToChange = ["Nuevas Colecciones", "Promos Exclusivas", "El Stock Actualizado", "Colección Invierno", "Todo para Vos"]; let textIndex = 0;
+            setInterval(() => { textIndex = (textIndex + 1) % textsToChange.length; changingTextElement.classList.remove('text-fade-active'); changingTextElement.classList.add('text-fade-exit'); setTimeout(() => { changingTextElement.textContent = textsToChange[textIndex]; changingTextElement.classList.remove('text-fade-exit'); changingTextElement.classList.add('text-fade-active'); }, 300); }, 4000); 
+
+            // ... (Lógica de Navegación, showCategoryView, renderProducts sin cambios) ...
+            categoryButtons.forEach(button => { button.addEventListener('click', () => { const group = button.dataset.group; showCategoryView(group); }); });
+            backButton.addEventListener('click', () => { categoryView.classList.add('hidden'); categoryView.classList.remove('view-fade-in'); mainPortal.classList.remove('hidden'); mainPortal.classList.add('view-fade-in'); productGrid.innerHTML = ''; subCategoryTabs.innerHTML = ''; });
+            subCategoryTabs.addEventListener('click', (e) => { const target = e.target.closest('.sub-category-btn'); if (!target) return; const subCategoryKey = target.dataset.key; subCategoryTabs.querySelectorAll('.sub-category-btn').forEach(btn => { btn.classList.remove('bg-white', 'text-gray-900'); btn.classList.add('bg-white/10', 'text-white', 'hover:bg-white/20'); }); target.classList.add('bg-white', 'text-gray-900'); target.classList.remove('bg-white/10', 'text-white', 'hover:bg-white/20'); renderProducts(currentGroup, subCategoryKey); });
+            function showCategoryView(groupKey) { currentGroup = groupKey; mainPortal.classList.add('hidden'); mainPortal.classList.remove('view-fade-in'); categoryView.classList.remove('hidden'); categoryView.classList.add('view-fade-in'); categoryTitle.textContent = categoryTitles[groupKey] || 'Categoría'; subCategoryTabs.innerHTML = ''; const tabs = subCategories[groupKey]; tabs.forEach((tab, index) => { const tabBtn = document.createElement('button'); tabBtn.dataset.key = tab.key; tabBtn.className = 'sub-category-btn py-2 px-4 rounded-full text-sm font-medium transition-colors backdrop-blur-md'; if (index === 0) { tabBtn.classList.add('bg-white', 'text-gray-900'); } else { tabBtn.classList.add('bg-white/10', 'text-white', 'hover:bg-white/20'); } tabBtn.textContent = tab.name; subCategoryTabs.appendChild(tabBtn); }); renderProducts(groupKey, tabs[0].key); window.scrollTo(0, 0); }
+            function renderProducts(groupKey, subCategoryKey) { productGrid.innerHTML = ''; let productsToRender = []; if (subCategoryKey === 'all-hombres' || subCategoryKey === 'all-mujeres') { const categoriesInGroup = groupProducts[groupKey]; productsToRender = allProducts.filter(p => categoriesInGroup.includes(p.category)); } else { productsToRender = allProducts.filter(p => p.category === subCategoryKey); } if (!productsToRender || productsToRender.length === 0) { productGrid.innerHTML = '<p class="text-gray-400 col-span-full">No hay productos en esta categoría por el momento.</p>'; return; } productsToRender.forEach(product => { const card = document.createElement('div'); card.className = 'bg-white text-gray-900 rounded-lg shadow-md overflow-hidden flex flex-col'; const formattedPrice = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(product.price); card.innerHTML = ` <div class="aspect-w-1 aspect-h-1 w-full"> <img src="${product.img}" alt="${product.name}" class="object-cover w-full h-full" onerror="this.src='https://placehold.co/400x500/CCCCCC/999999?text=Error+Img'; this.onerror=null;"> </div> <div class="p-4 flex flex-col flex-grow"> <h3 class="text-lg font-semibold truncate">${product.name}</h3> <p class="text-xl font-bold mt-1">${formattedPrice}</p> <div class="mt-2 flex justify-between items-center"> ${product.stock ? `<span class="text-sm font-medium text-green-600">DISPONIBLE EN STOCK</span>` : `<span class="text-sm font-medium text-red-600">AGOTADO</span>`} </div> <div class="mt-3"> <span class="text-sm font-medium text-gray-500">Talles:</span> <div class="flex flex-wrap gap-2 mt-1"> ${product.sizes.map(size => `<span class="text-xs font-semibold border border-gray-300 rounded-full px-2 py-0.5">${size}</span>`).join('')} </div> </div> <div class="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-600 space-y-1"> <p>Recibimos tarjetas de crédito</p> <p>Realizamos envíos delivery 3804-855817</p> </div> </div> `; productGrid.appendChild(card); }); }
+
+            
+            // --- Lógica del Modal de Admin (¡MODIFICADA!) ---
+            
+            adminLoginBtn.addEventListener('click', () => {
+                adminModal.classList.remove('hidden');
+                setTimeout(() => { 
+                    adminModal.classList.remove('opacity-0');
+                    modalContent.classList.remove('scale-95');
+                    modalContent.classList.remove('opacity-0');
+                }, 10);
+            });
+            function closeModal() {
+                adminModal.classList.add('opacity-0');
+                modalContent.classList.add('scale-95');
+                modalContent.classList.add('opacity-0');
+                setTimeout(() => {
+                    adminModal.classList.add('hidden');
+                }, 300); 
+            }
+            closeModalBtn.addEventListener('click', closeModal);
+            adminModal.addEventListener('click', (e) => {
+                if (e.target === adminModal) closeModal();
+            });
+
+            // CAMBIO: Lógica de Login con SweetAlert
+            adminLoginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                const loginApiUrl = `${API_URL}/login`;
+                try {
+                    const response = await fetch(loginApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    
+                    if (response.ok) {
+                        // ¡Login Exitoso! Mostrar alerta y redirigir
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Bienvenido!',
+                            text: 'Redirigiendo al panel de admin...',
+                            timer: 1500,
+                            showConfirmButton: false,
+                            willClose: () => {
+                                window.location.href = '/admin'; // Redirige a la RUTA /admin
+                            }
+                        });
+                    } else {
+                        // CAMBIO: Reemplaza alert()
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Usuario o contraseña incorrectos.'
+                        });
+                    }
+                } catch (error) {
+                    // CAMBIO: Reemplaza alert()
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de Red',
+                        text: 'No se pudo conectar con el servidor de login.'
+                    });
+                }
+            });
+            
+            // ... (Footer y Carga Inicial sin cambios) ...
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            fetchAllProducts();
+        });
+    </script>
+    
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

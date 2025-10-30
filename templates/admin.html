@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Avanti</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ... (tus estilos sin cambios) ... */
+        body { font-family: 'Inter', sans-serif; }
+        .modal { transition: opacity 0.25s ease, transform 0.25s ease; }
+        .modal-content { transition: transform 0.25s ease; }
+        .tab-btn { @apply whitespace-nowrap px-3 py-2 font-medium text-sm border-b-2; }
+        
+        /* Estilos para el Toast de SweetAlert */
+        body.swal2-toast-shown .swal2-container {
+            z-index: 10000; /* Asegura que el toast esté por encima del modal */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+    <header class="bg-white shadow">
+        <nav class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">Panel de Administración</h1>
+            <div class="flex items-center space-x-4">
+                <a href="/" class="text-sm text-purple-600 hover:text-purple-800">Volver al Catálogo &rarr;</a>
+                <button id="logoutButton" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition-all text-sm">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold">Gestionar Catálogo</h2>
+            <button id="addProductBtn" class="bg-purple-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-800 transition-colors">
+                + Añadir Producto
+            </button>
+        </div>
+        <div class="mb-4">
+            <nav id="categoryTabs" class="flex flex-wrap space-x-1 sm:space-x-2 border-b border-gray-200" aria-label="Tabs">
+                <button class="tab-btn whitespace-nowrap px-3 py-2 font-medium text-sm border-b-2 border-purple-600 text-purple-600" data-category="all">Todos</button>
+                <button class="tab-btn whitespace-nowrap px-3 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-category="masculino">Ind. Masculina</button>
+                <button class="tab-btn whitespace-nowrap px-3 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-category="femenino">Ind. Femenina</button>
+                <button class="tab-btn whitespace-nowrap px-3 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-category="jeans-hombres">Jeans Hombres</button>
+                <button class="tab-btn whitespace-nowrap px-3 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-category="jeans-mujeres">Jeans Mujeres</button>
+                <button class="tab-btn whitespace-nowrap px-3 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-category="promos-hombres">Promos Hombres</button>
+                <button class="tab-btn whitespace-nowrap px-3 py-2 font-medium text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-category="promos-mujeres">Promos Mujeres</button>
+            </nav>
+        </div>
+        <div class="bg-white rounded-lg shadow overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="productModal" class="modal hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 scale-95">
+        <div class="modal-content bg-white w-full max-w-lg rounded-lg shadow-xl p-6 relative transform scale-100 opacity-100">
+            <button id="closeModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h3 id="modalTitle" class="text-2xl font-semibold mb-6">Añadir Producto</h3>
+            <form id="productForm" class="space-y-4">
+                <input type="hidden" id="productId" name="productId">
+                <input type="hidden" id="img_url_hidden" name="img_url">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input type="text" id="name" name="name" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg" required>
+                </div>
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-700">Categoría</label>
+                    <select id="category" name="category" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg" required>
+                        <option value="masculino">Indumentaria Masculina</option><option value="femenino">Indumentaria Femenina</option><option value="jeans-hombres">Jeans Hombres</option><option value="jeans-mujeres">Jeans Mujeres</option><option value="promos-hombres">Promociones Hombres</option><option value="promos-mujeres">Promociones Mujeres</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="price" class="block text-sm font-medium text-gray-700">Precio</label>
+                    <input type="number" id="price" name="price" step="0.01" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg" required placeholder="37000.50">
+                </div>
+                <div>
+                    <label for="img_file" class="block text-sm font-medium text-gray-700">Subir Imagen</label>
+                    <input type="file" id="img_file" name="img_file" accept="image/png, image/jpeg, image/gif, image/webp" class="w-full mt-1 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+                    <img id="img_preview" src="" alt="Vista previa" class="mt-2 h-20 w-20 object-cover rounded-md hidden">
+                </div>
+                <div>
+                    <label for="sizes" class="block text-sm font-medium text-gray-700">Talles (separados por coma)</label>
+                    <input type="text" id="sizes" name="sizes" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg" placeholder="38,40,42,44">
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="stock" name="stock" class="h-4 w-4 text-purple-600 border-gray-300 rounded">
+                    <label for="stock" class="ml-2 block text-sm text-gray-900">Disponible en Stock</label>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" id="cancelModal" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="bg-purple-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-800">Guardar Producto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api'; 
+        let allProducts = []; 
+        let currentCategory = 'all';
+        
+        // --- Selectores del DOM (Sin cambios) ---
+        const productTableBody = document.getElementById('productTableBody');
+        const addProductBtn = document.getElementById('addProductBtn');
+        const productModal = document.getElementById('productModal');
+        const modalContent = productModal.querySelector('.modal-content');
+        const closeModalBtn = document.getElementById('closeModal');
+        const cancelModalBtn = document.getElementById('cancelModal');
+        const productForm = document.getElementById('productForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const productIdField = document.getElementById('productId');
+        const imgUrlHiddenField = document.getElementById('img_url_hidden');
+        const imgPreview = document.getElementById('img_preview');
+        const imgFileInput = document.getElementById('img_file');
+        const categoryTabs = document.getElementById('categoryTabs');
+
+        // --- Mostrar/Ocultar Modal (Sin cambios) ---
+        function showModal(title = 'Añadir Producto', product = null) {
+            modalTitle.textContent = title;
+            productModal.classList.remove('hidden');
+            if (product) {
+                productIdField.value = product.id;
+                document.getElementById('name').value = product.name;
+                document.getElementById('category').value = product.category;
+                document.getElementById('price').value = product.price;
+                imgUrlHiddenField.value = product.img; 
+                if (product.img) { imgPreview.src = product.img; imgPreview.classList.remove('hidden'); } else { imgPreview.classList.add('hidden'); }
+                document.getElementById('sizes').value = product.sizes.join(','); 
+                document.getElementById('stock').checked = product.stock;
+            } else {
+                productForm.reset();
+                productIdField.value = '';
+                imgUrlHiddenField.value = '';
+                imgPreview.src = '';
+                imgPreview.classList.add('hidden');
+            }
+            setTimeout(() => { productModal.classList.remove('opacity-0', 'scale-95'); modalContent.classList.remove('scale-100', 'opacity-100'); }, 10);
+        }
+        function hideModal() {
+            productModal.classList.add('opacity-0', 'scale-95');
+            modalContent.classList.add('scale-100', 'opacity-100'); 
+            setTimeout(() => { productModal.classList.add('hidden'); productForm.reset(); productIdField.value = ''; imgUrlHiddenField.value = ''; imgPreview.src = ''; imgPreview.classList.add('hidden'); }, 250);
+        }
+
+        // --- Vista Previa de Imagen (Sin cambios) ---
+        imgFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) { imgPreview.src = URL.createObjectURL(file); imgPreview.classList.remove('hidden'); } else { imgPreview.src = ''; imgPreview.classList.add('hidden'); }
+        });
+
+        // --- Lógica CRUD (MODIFICADA) ---
+
+        // (R) Leer y Mostrar Productos
+        async function fetchAndRenderProducts() {
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                if (!response.ok) throw new Error('Error al cargar productos');
+                allProducts = await response.json(); 
+                renderTable(); 
+            } catch (error) {
+                // CAMBIO: Alerta de error al cargar
+                productTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-700 font-semibold">Error al cargar productos. Revisa la consola y asegúrate de que el servidor (app.py) esté funcionando.</td></tr>`;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Carga',
+                    text: 'No se pudieron cargar los productos. El servidor podría estar caído.'
+                });
+            }
+        }
+
+        // Renderizar la tabla (Sin cambios)
+        function renderTable() {
+            productTableBody.innerHTML = ''; 
+            const filteredProducts = currentCategory === 'all' ? allProducts : allProducts.filter(p => p.category === currentCategory);
+            if (filteredProducts.length === 0) { productTableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No hay productos en esta categoría.</td></tr>'; return; }
+            filteredProducts.forEach(product => {
+                const row = document.createElement('tr'); row.className = 'hover:bg-gray-50';
+                const categoryNames = { 'masculino': 'Ind. Masculina', 'femenino': 'Ind. Femenina', 'jeans-hombres': 'Jeans Hombres', 'jeans-mujeres': 'Jeans Mujeres', 'promos-hombres': 'Promos Hombres', 'promos-mujeres': 'Promos Mujeres' };
+                const categoryFriendlyName = categoryNames[product.category] || product.category;
+                const formattedPrice = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(product.price);
+                row.innerHTML = ` <td class="px-6 py-4 whitespace-nowrap"> <div class="flex items-center"> <div class="flex-shrink-0 h-10 w-10"> <img class="h-10 w-10 rounded-md object-cover" src="${product.img}" alt="" onerror="this.src='https://placehold.co/40x40/E2E8F0/64748B?text=Img'; this.onerror=null;"> </div> <div class="ml-4"> <div class="text-sm font-medium text-gray-900">${product.name}</div> </div> </div> </td> <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${categoryFriendlyName}</td> <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedPrice}</td> <td class="px-6 py-4 whitespace-nowrap"> ${product.stock ? '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">En Stock</span>' : '<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Agotado</span>'} </td> <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"> <button class="edit-btn text-purple-600 hover:text-purple-900" data-id="${product.id}">Editar</button> <button class="delete-btn text-red-600 hover:text-red-900 ml-4" data-id="${product.id}">Eliminar</button> </td> `;
+                productTableBody.appendChild(row);
+            });
+        }
+        
+        // --- Manejo de Pestañas (Tabs) (Sin cambios) ---
+        const activeTabClasses = ['border-purple-600', 'text-purple-600'];
+        const inactiveTabClasses = ['border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300'];
+        categoryTabs.addEventListener('click', (e) => { const target = e.target.closest('.tab-btn'); if (target) { categoryTabs.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove(...activeTabClasses); btn.classList.add(...inactiveTabClasses); }); target.classList.add(...activeTabClasses); target.classList.remove(...inactiveTabClasses); currentCategory = target.dataset.category; renderTable(); } });
+
+        // (C) Crear / (U) Actualizar Producto (¡MODIFICADO!)
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('productId', document.getElementById('productId').value);
+            formData.append('name', document.getElementById('name').value);
+            formData.append('category', document.getElementById('category').value);
+            formData.append('price', document.getElementById('price').value);
+            formData.append('sizes', document.getElementById('sizes').value);
+            formData.append('stock', document.getElementById('stock').checked);
+            formData.append('img_url', imgUrlHiddenField.value); 
+            const imgFile = imgFileInput.files[0];
+            if (imgFile) { formData.append('img_file', imgFile); }
+            
+            const id = formData.get('productId');
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_URL}/products/${id}` : `${API_URL}/products`;
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    body: formData 
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al guardar el producto');
+                }
+                
+                hideModal();
+                fetchAndRenderProducts(); 
+
+                // CAMBIO: Alerta "Toast" de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: id ? '¡Actualizado!' : '¡Producto Creado!',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+
+            } catch (error) {
+                // CAMBIO: Reemplaza alert()
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al Guardar',
+                    text: error.message
+                });
+            }
+        });
+
+        // (D) Eliminar y (U) Editar (¡MODIFICADO!)
+        productTableBody.addEventListener('click', async (e) => {
+            const target = e.target;
+            const id = target.dataset.id;
+            
+            if (!id) return;
+
+            // (D) Eliminar (CAMBIO: Reemplaza confirm() y alert())
+            if (target.classList.contains('delete-btn')) {
+                
+                const result = await Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "¡No podrás revertir esto!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: 'Sí, ¡eliminar!',
+                    cancelButtonText: 'Cancelar'
+                });
+
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`${API_URL}/products/${id}`, { method: 'DELETE' });
+                        if (!response.ok) throw new Error('Error al eliminar');
+                        
+                        Swal.fire(
+                            '¡Eliminado!',
+                            'El producto ha sido eliminado.',
+                            'success'
+                        );
+                        fetchAndRenderProducts(); // Recargar
+                    } catch (error) {
+                        Swal.fire('Error', 'No se pudo eliminar el producto.', 'error');
+                    }
+                }
+            }
+
+            // (U) Editar - Abrir modal (CAMBIO: Reemplaza alert())
+            if (target.classList.contains('edit-btn')) {
+                try {
+                    const response = await fetch(`${API_URL}/products/${id}`);
+                    if (!response.ok) throw new Error('Error al obtener datos');
+                    const product = await response.json();
+                    showModal('Editar Producto', product);
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'No se pudo cargar la información del producto.'
+                    });
+                }
+            }
+        });
+
+        // --- Event Listeners de Modales (Sin cambios) ---
+        addProductBtn.addEventListener('click', () => showModal());
+        closeModalBtn.addEventListener('click', hideModal);
+        cancelModalBtn.addEventListener('click', hideModal);
+        productModal.addEventListener('click', (e) => {
+            if (e.target === productModal) hideModal();
+        });
+
+        // --- Carga Inicial ---
+        document.addEventListener('DOMContentLoaded', fetchAndRenderProducts);
+
+    </script>
+    
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

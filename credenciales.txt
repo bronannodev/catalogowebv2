@@ -1,0 +1,10 @@
+User: Santi2
+Password: SDA464DA56Fsdlgm4Fasdajns
+Clave Secreta de Registro: 98765
+
+--Usaurios normales--
+User: VictoriaToledo
+Password: Vic745ad46Dsa
+Clave Secreta de Registro: 123745
+
+-----

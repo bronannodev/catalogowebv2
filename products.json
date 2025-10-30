@@ -1,0 +1,13 @@
+[
+  {
+    "id": "77d8bc20-a093-42db-9a5b-7491ee58fe26",
+    "name": "Baggy bordado",
+    "category": "promos-hombres",
+    "price": 41000.0,
+    "img": "/static/uploads/c803e930-b1bf-41da-b056-15854513f402.jpg",
+    "stock": true,
+    "sizes": [
+      "44"
+    ]
+  }
+]
